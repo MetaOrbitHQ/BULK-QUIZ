@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Welcome to BULK | Contributor Quiz</title>
+  <style>
+    :root {
+      --bg:#0f1724;
+      --card:#0b1220;
+      --muted:#9aa4b2;
+      --accent:#7c3aed;
+      --success:#10b981;
+    }
+    * { box-sizing:border-box; }
+    body {
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial;
+      background:radial-gradient(circle at top,#111b34 0%,#070f1d 100%);
+      color:#e6eef6;
+      margin:0; padding:24px;
+    }
+    .container { max-width:880px; margin:0 auto; text-align:center; }
+    header { display:flex; flex-direction:column; align-items:center; gap:8px; margin-bottom:28px; }
+    .logo {
+      width:72px; height:72px; border-radius:16px;
+      background:linear-gradient(135deg,var(--accent),#2b6df6);
+      display:flex; align-items:center; justify-content:center;
+      font-weight:800; color:white; letter-spacing:1px; font-size:20px;
+      box-shadow:0 0 28px rgba(124,58,237,0.4);
+    }
+    h1{ font-size:26px; margin:8px 0 0; }
+    .handle{ color:var(--muted); font-size:14px; margin-bottom:12px; }
+    p.lead{ margin:8px 0 28px; color:var(--muted); max-width:640px; }
+
+    .card {
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border:1px solid rgba(255,255,255,0.04);
+      padding:20px; border-radius:12px; text-align:left;
+    }
+    .question{ font-weight:600; margin-bottom:12px; }
+    .options{ display:grid; gap:10px; }
+    .opt{
+      background:rgba(255,255,255,0.02); padding:12px; border-radius:8px;
+      border:1px solid rgba(255,255,255,0.02); cursor:pointer; text-align:left;
+    }
+    .opt:hover{ transform:translateY(-2px); box-shadow:0 6px 18px rgba(0,0,0,0.6); }
+    .opt.selected{
+      outline:2px solid rgba(124,58,237,0.22);
+      background:linear-gradient(90deg, rgba(124,58,237,0.06), rgba(43,109,246,0.02));
+    }
+    .controls{ display:flex; justify-content:space-between; align-items:center; margin-top:18px; }
+    button{
+      background:var(--accent); border:none; color:white;
+      padding:10px 14px; border-radius:10px; cursor:pointer; font-weight:600;
+    }
+    button.ghost{ background:transparent; border:1px solid rgba(255,255,255,0.06); }
+    .progress{ height:10px; background:rgba(255,255,255,0.03); border-radius:999px; overflow:hidden; }
+    .progress > i{ display:block; height:100%; background:linear-gradient(90deg,var(--accent),#2b6df6); width:0%; }
+    .meta{ display:flex; gap:12px; align-items:center; color:var(--muted); font-size:13px; }
+    .result{text-align:center;}
+    .badge{ display:inline-block; padding:8px 12px; border-radius:999px; background:rgba(255,255,255,0.03); color:var(--muted); }
+    footer{ margin-top:28px; color:var(--muted); font-size:13px; text-align:center; }
+    @media (max-width:520px){ body{padding:12px} .logo{width:56px;height:56px;font-size:18px} }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">BULK</div>
+      <h1>Welcome to BULK Exchange</h1>
+      <div class="handle">@bulktrade</div>
+      <p class="lead">Your journey to become a verified <strong>Contributor</strong> starts here. Prove your understanding of BULK’s performance-first decentralized trading design and unlock your community badge.</p>
+    </header>
+
+    <main class="card" id="app">
+      <div id="quiz-screen">
+        <div class="meta"><span class="badge" id="qcount">Question 1 / 8</span><span id="timer" class="badge">—</span></div>
+        <div style="height:12px;margin:10px 0"><div class="progress"><i id="progressbar"></i></div></div>
+        <div id="question-area"></div>
+        <div class="controls">
+          <button class="ghost" id="prevBtn">Previous</button>
+          <div style="display:flex;gap:8px">
+            <button id="skipBtn" class="ghost">Skip</button>
+            <button id="nextBtn">Next</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="result-screen" style="display:none">
+        <div class="result">
+          <h2 id="scoreTitle">Your score</h2>
+          <p id="scoreText" style="font-size:28px;font-weight:800;margin:8px 0">0 / 8</p>
+          <p id="feedback" style="color:var(--muted)"></p>
+          <div style="margin-top:14px;display:flex;gap:8px;justify-content:center">
+            <button id="retryBtn">Retry</button>
+            <button id="shareBtn" class="ghost">Copy Result</button>
+          </div>
+          <div style="margin-top:12px;color:var(--muted);font-size:13px">Earned Contributor Badge if you score ≥ 7/8.</div>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      Designed for <strong>BULK Exchange</strong> contributors · Built by the community · <span style="color:var(--accent)">@bulktrade</span>
+    </footer>
+  </div>
+
+<script>
+const PASSING_SCORE = 7;
+const ENABLE_TIMER = false;
+const TIMER_SECONDS = 45;
+
+const questions = [
+  {q: 'What is BULK Exchange\'s primary design goal?', opts:['Make a centralized order manager','Close the performance gap between centralized and decentralized venues','Replace Solana as base layer','Provide a custodial wallet'], a:1},
+  {q: 'Which matching policy does BULK guarantee?', opts:['Price-Time priority (FIFO)','Pro-rata matching','Randomized ordering','Last-in-first-out'], a:0},
+  {q: 'BULK claims to have no sequencers and no bridges. Why is that important?', opts:['Reduces latency','Removes classes of centralization and censorship risk','Lowers gas fees','Increases token supply'], a:1},
+  {q: 'Which chain does BULK leverage for settlement and custody?', opts:['Ethereum','Solana','Bitcoin','Polkadot'], a:1},
+  {q: 'What latency target does BULK aim for in matching + propagation?', opts:['5–20ms','100–200ms','500–1000ms','1–5 seconds'], a:0},
+  {q: 'What does “verifiable and permissionless” mean for validators?', opts:['Validators must be invited','State is cryptographically verifiable and anyone can join by staking','Only the team can validate','Validators run centrally'], a:1},
+  {q: 'BULK emphasizes FIFO matching. What is a direct benefit of FIFO?', opts:['Allows reordering for priority traders','Ensures fairness by time priority','Supports centralized front-running','Reduces throughput'], a:1},
+  {q: 'Which of these is NOT a core BULK objective?', opts:['High-performance order book','Leader-based block production','Low-latency matching','Verifiable and permissionless'], a:1}
+];
+
+let current = 0; const answers = new Array(questions.length).fill(null);
+let timerInterval = null; let timeLeft = TIMER_SECONDS;
+
+const $ = id => document.getElementById(id);
+
+function renderQuestion(){
+  const q = questions[current];
+  const area = $('question-area'); area.innerHTML='';
+  const container = document.createElement('div');
+  container.innerHTML = `<div class="question">${q.q}</div><div class="options" id="opts"></div>`;
+  area.appendChild(container);
+  const opts = $('opts');
+  q.opts.forEach((o,i)=>{
+    const btn = document.createElement('button');
+    btn.className='opt'; btn.innerText = o; btn.onclick=()=>selectOption(i);
+    if(answers[current]===i) btn.classList.add('selected'); opts.appendChild(btn);
+  });
+  $('qcount').innerText=`Question ${current+1} / ${questions.length}`;
+  $('progressbar').style.width=Math.round((current/questions.length)*100)+'%';
+  resetTimer();
+}
+
+function selectOption(i){ answers[current]=i; document.querySelectorAll('.opt').forEach((el,idx)=> el.classList.toggle('selected',idx===i)); }
+function nextQuestion(){ if(current<questions.length-1){current++;renderQuestion();} else finishQuiz(); }
+function prevQuestion(){ if(current>0){current--;renderQuestion();} }
+function skipQuestion(){ answers[current]=null; nextQuestion(); }
+
+function finishQuiz(){
+  clearInterval(timerInterval);
+  $('quiz-screen').style.display='none';
+  $('result-screen').style.display='block';
+  const score=answers.reduce((s,a,i)=>s+(a===questions[i].a?1:0),0);
+  $('scoreText').innerText=`${score} / ${questions.length}`;
+  $('feedback').innerText=score>=PASSING_SCORE?'🔥 Congratulations — you qualify for the Contributor Badge!':'Good try — read the design docs and try again!';
+}
+
+function retry(){ current=0; for(let i=0;i<answers.length;i++)answers[i]=null; $('result-screen').style.display='none'; $('quiz-screen').style.display='block'; renderQuestion(); }
+function copyResult(){ const score=answers.reduce((s,a,i)=>s+(a===questions[i].a?1:0),0); navigator.clipboard?.writeText(`I scored ${score}/${questions.length} on the BULK Contributor Quiz.`).then(()=>alert('Result copied to clipboard')); }
+function resetTimer(){ clearInterval(timerInterval); if(!ENABLE_TIMER){$('timer').innerText='—';return;} timeLeft=TIMER_SECONDS; $('timer').innerText=`Time: ${timeLeft}s`; timerInterval=setInterval(()=>{timeLeft--; $('timer').innerText=`Time: ${timeLeft}s`; if(timeLeft<=0){clearInterval(timerInterval); nextQuestion();}},1000); }
+
+$('nextBtn').addEventListener('click',nextQuestion);
+$('prevBtn').addEventListener('click',prevQuestion);
+$('skipBtn').addEventListener('click',skipQuestion);
+$('retryBtn').addEventListener('click',retry);
+$('shareBtn').addEventListener('click',copyResult);
+
+renderQuestion();
+</script>
+</body>
+</html>
